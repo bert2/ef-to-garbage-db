@@ -1,13 +1,11 @@
-﻿namespace GarbageDb
-{
+﻿namespace GarbageDb {
     using System.Collections.Generic;
 
-    public class Blog
-    {
-        public int BlogId { get; set; }
+    public class Blog {
+        public int Id { get; set; }
 
         public string Url { get; set; }
 
-        public virtual ICollection<Post> Post { get; set; } = new HashSet<Post>();
+        public ICollection<Post> Posts { get; set; } = new HashSet<Post>();
     }
 }
