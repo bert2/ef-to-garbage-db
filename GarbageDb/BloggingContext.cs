@@ -28,6 +28,14 @@
                 .HasOne(p => p.Blog)
                 .WithMany(b => b.Posts)
                 .HasForeignKey(p => p.BlogId));
+
+            mb.Entity<Comment>(x => x.ToTable("M_Comments"));
+            mb.Entity<Comment>(x => x.Property(c => c.Id).HasColumnName("Pid"));
+            mb.Entity<Comment>(x => x.Property(c => c.PostId).HasColumnName("PostXid"));
+            mb.Entity<Comment>(x => x
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(c => c.PostId));
         }
     }
 }
