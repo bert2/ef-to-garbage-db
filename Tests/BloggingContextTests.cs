@@ -19,13 +19,14 @@ namespace Tests {
         public void LoadsPosts() => BloggingContext(db => 
             db.Posts.Count().ShouldBe(4));
 
+        // No clue what's going on here: post count should be 2 but for some reason it's 1?!
         [Fact]
         public void LoadsPostsOfFilteredBlog() => BloggingContext(db => {
             var blog = db.Blogs.Single(b => b.Id == 2);
             var posts = db.Blogs.Where(b => b.Id == 2).Select(b => b.Posts).ToArray();
-            var blogCount = blog.Posts.Count;
-            var count = posts.Count();
-            var length = posts.Length;
+            var blogCount = blog.Posts.Count; // has correct count 2
+            var count = posts.Count(); // has incorrect count 1
+            var length = posts.Length; // has incorrect count 1
             posts.Count().ShouldBe(2);
         });
 
