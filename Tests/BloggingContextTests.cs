@@ -42,17 +42,6 @@ namespace Tests {
         });
 
         [Fact]
-        public void DeletesPostFromBlog() => BloggingContext(db => {
-            var blog = db.Blogs.Include(b => b.Posts).Single(b => b.Id == 2);
-            var post = blog.Posts.Single(p => p.Title == "No more space!");
-
-            blog.Posts.Remove(post);
-            db.SaveChanges();
-
-            db.Posts.Any(p => p.Id == post.Id).ShouldBe(false);
-        });
-
-        [Fact]
         public void UpdatesPostOfBlog() => BloggingContext(db => {
             var blog = db.Blogs.Include(b => b.Posts).Single(b => b.Id == 2);
             var post = blog.Posts.Single(p => p.Title == "Title...");
@@ -61,6 +50,17 @@ namespace Tests {
             db.SaveChanges();
 
             db.Posts.Any(p => p.Title == "Super Title!").ShouldBe(true);
+        });
+
+        [Fact]
+        public void DeletesPostFromBlog() => BloggingContext(db => {
+            var blog = db.Blogs.Include(b => b.Posts).Single(b => b.Id == 2);
+            var post = blog.Posts.Single(p => p.Title == "No more space!");
+
+            blog.Posts.Remove(post);
+            db.SaveChanges();
+
+            db.Posts.Any(p => p.Id == post.Id).ShouldBe(false);
         });
 
         [Fact]
