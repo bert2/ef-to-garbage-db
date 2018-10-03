@@ -1,5 +1,6 @@
 namespace Tests {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
 
     using GarbageDb;
@@ -12,22 +13,16 @@ namespace Tests {
 
     public class BloggingContextTests : IClassFixture<BloggingDbSeed> {
         [Fact]
-        public void LoadsBlogs() => BloggingContext(db => {
-            var blogs = db.Blogs.ToArray();
-            blogs.Length.ShouldBeGreaterThan(0);
-        });
+        public void LoadsBlogs() => BloggingContext(db => 
+            db.Blogs.Count().ShouldBeGreaterThan(0));
 
         [Fact]
-        public void LoadsPosts() => BloggingContext(db => {
-            var posts = db.Posts.ToArray();
-            posts.Length.ShouldBeGreaterThan(0);
-        });
+        public void LoadsPosts() => BloggingContext(db => 
+            db.Posts.Count().ShouldBeGreaterThan(0));
 
         [Fact]
-        public void LoadsPostsOfFilteredBlog() => BloggingContext(db => {
-            var posts = db.Blogs.Where(b => b.Id == 2).Select(b => b.Posts).ToArray();
-            posts.Length.ShouldBeGreaterThan(0);
-        });
+        public void LoadsPostsOfFilteredBlog() => BloggingContext(db => 
+            db.Blogs.Where(b => b.Id == 2).Select(b => b.Posts).Count().ShouldBeGreaterThan(0));
 
         [Fact]
         public void LoadsIncludedPosts() => BloggingContext(db => {
