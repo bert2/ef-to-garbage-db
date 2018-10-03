@@ -27,6 +27,13 @@
                     BlogXid integer not null,
                     Title   text,
                     Content text
+                );
+
+                drop table if exists M_Comments;
+                create table M_Comments (
+                    Pid     integer primary key,
+                    PostXid integer not null,
+                    Message text
                 );",
                 db)
                 .ExecuteNonQuery();
@@ -41,7 +48,11 @@
                     (1, 1, 'Foo', 'Bar'),
                     (2, 1, 'We turn YOUR money into shit!', 'Like... literally.'),
                     (3, 2, 'Title...', 'Content...'),
-                    (4, 2, 'No more space!', 'Too many developers sent to our facility lately.');",
+                    (4, 2, 'No more space!', 'Too many developers sent to our facility lately.');
+                
+                insert into M_Comments (Pid, PostXid, Message) values
+                    (1, 2, 'I WANT MY MONEY BACK!'),
+                    (2, 2, 'You will hear from our lawyers...')",
                 db)
                 .ExecuteNonQuery();
     }
