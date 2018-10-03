@@ -40,7 +40,8 @@
                 insert into M_Posts (Pid, BlogXid, Title, Content) values
                     (1, 1, 'Foo', 'Bar'),
                     (2, 1, 'We turn YOUR money into shit!', 'Like... literally.'),
-                    (3, 2, 'Title...', 'Content...');",
+                    (3, 2, 'Title...', 'Content...'),
+                    (4, 2, 'No more space!', 'Too many developers sent to our facility lately.');",
                 db)
                 .ExecuteNonQuery();
     }
