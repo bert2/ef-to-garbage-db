@@ -11,6 +11,8 @@
 
         public virtual DbSet<Post> Posts { get; set; }
 
+        public virtual DbSet<Comment> Comments { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
             if (!optionsBuilder.IsConfigured) {
                 optionsBuilder.UseSqlite("Data Source=blogging.db");
