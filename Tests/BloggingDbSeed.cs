@@ -1,17 +1,14 @@
 ﻿namespace Tests {
-    using System;
     using System.Data.SQLite;
 
-    public class BloggingDbSeed : IDisposable {
-        public BloggingDbSeed() {
+    public static class BloggingDbSeed {
+        public static void Reset() {
             using (var db = new SQLiteConnection("Data Source=blogging.db")) {
                 db.Open();
                 SeedSchema(db);
                 SeedData(db);
             }
         }
-
-        public void Dispose() { }
 
         private static void SeedSchema(SQLiteConnection db) => 
             new SQLiteCommand(@"
