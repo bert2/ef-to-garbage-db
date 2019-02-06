@@ -7,11 +7,12 @@
         public BloggingContext(DbContextOptions<BloggingContext> options)
             : base(options) { }
 
-        public virtual DbSet<Blog> Blogs { get; set; }
-
-        public virtual DbSet<Post> Posts { get; set; }
-
-        public virtual DbSet<Comment> Comments { get; set; }
+        public DbSet<Blog> Blogs { get; set; }
+        public DbSet<Post> Posts { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<NegativeReview> NegativeReviews { get; set; }
+        public DbSet<PositiveReview> PositiveReviews { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
             if (!optionsBuilder.IsConfigured) {
@@ -38,6 +39,18 @@
                 .HasOne(c => c.Post)
                 .WithMany(p => p.Comments)
                 .HasForeignKey(c => c.PostId));
+
+            mb.Entity<Review>().ToTable("M_Reviews");
+            mb.Entity<Review>().Property(r => r.Id).HasColumnName("Pid");
+            mb.Entity<Review>().Property(r => r.PostId).HasColumnName("PostXid");
+            mb.Entity<Review>()
+                .HasDiscriminator<char>("Type")
+                .HasValue<PositiveReview>('P')
+                .HasValue<NegativeReview>('N');
+            mb.Entity<Review>()
+                .HasOne(r => r.Post)
+                .WithMany(p => p.Reviews)
+                .HasForeignKey(r => r.PostId);
         }
     }
 }

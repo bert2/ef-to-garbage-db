@@ -100,6 +100,26 @@ namespace Tests {
             db.Comments.Any(c => blog.Posts.Contains(c.Post)).ShouldBe(false);
         });
 
+        [Fact]
+        public void CanDiscriminateReviews() => BloggingContext(db => {
+            var post = db.Posts.Include(p => p.Reviews).Single(p => p.Id == 2);
+
+            post.Reviews.Count.ShouldBe(3);
+            post.Reviews.OfType<NegativeReview>().Count().ShouldBe(2);
+            post.Reviews.OfType<PositiveReview>().Count().ShouldBe(1);
+        });
+
+        //[Fact]
+        //public void CanIncludeTextsOfDiscriminatedReviews() => BloggingContext(db => {
+        //    var post = db.Posts
+        //        .Include(p => p.Reviews).ThenInclude(r => (r as NegativeReview).Critique)
+        //        .Include(p => p.Reviews).ThenInclude(r => (r as PositiveReview).Praise)
+        //        .Single(p => p.Id == 2);
+
+        //    post.Reviews.OfType<NegativeReview>().Count().ShouldBe(2);
+        //    post.Reviews.OfType<PositiveReview>().Count().ShouldBe(1);
+        //});
+
         private static void BloggingContext(Action<BloggingContext> action) {
             BloggingDbSeed.Reset();
             using (var db = new BloggingContext()) {

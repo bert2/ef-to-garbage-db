@@ -31,6 +31,13 @@
                     Pid     integer primary key,
                     PostXid integer not null,
                     Message text
+                );
+
+                drop table if exists M_Reviews;
+                create table M_Reviews (
+                    Pid     integer primary key,
+                    PostXid integer not null,
+                    Type    char not null
                 );",
                 db)
                 .ExecuteNonQuery();
@@ -49,7 +56,12 @@
                 
                 insert into M_Comments (Pid, PostXid, Message) values
                     (1, 2, 'I WANT MY MONEY BACK!'),
-                    (2, 2, 'You will hear from our lawyers...')",
+                    (2, 2, 'You will hear from our lawyers...');
+                
+                insert into M_Reviews (Pid, PostXid, Type) values
+                    (1, 2, 'P'),
+                    (2, 2, 'N'),
+                    (3, 2, 'N');",
                 db)
                 .ExecuteNonQuery();
     }

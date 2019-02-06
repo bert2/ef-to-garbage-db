@@ -13,5 +13,7 @@
         public Blog Blog { get; set; }
 
         public ICollection<Comment> Comments { get; set; } = new HashSet<Comment>();
+
+        public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
     }
 }
