@@ -12,29 +12,25 @@ namespace Tests {
 
     public class BloggingContextTests {
         [Fact]
-        public void LoadsBlogs() => BloggingContext(db => 
-            db.Blogs.Count().ShouldBe(2));
+        public void LoadsBlogs() => BloggingContext(db => db
+            .Blogs.Count().ShouldBe(2));
 
         [Fact]
-        public void LoadsPosts() => BloggingContext(db => 
-            db.Posts.Count().ShouldBe(4));
-
-        // No clue what's going on here: post count should be 2 but for some reason it's 1?!
-        [Fact]
-        public void LoadsPostsOfFilteredBlog() => BloggingContext(db => {
-            var blog = db.Blogs.Single(b => b.Id == 2);
-            var posts = db.Blogs.Where(b => b.Id == 2).Select(b => b.Posts).ToArray();
-            var blogCount = blog.Posts.Count; // has correct count 2
-            var count = posts.Count(); // has incorrect count 1
-            var length = posts.Length; // has incorrect count 1
-            posts.Count().ShouldBe(2);
-        });
+        public void LoadsPosts() => BloggingContext(db => db
+            .Posts.Count().ShouldBe(4));
 
         [Fact]
-        public void LoadsIncludedPosts() => BloggingContext(db => {
-            var blogs = db.Blogs.Include(b => b.Posts).ToArray();
-            blogs.SelectMany(b => b.Posts).Count().ShouldBe(4);
-        });
+        public void LoadsPostsOfFilteredBlog() => BloggingContext(db => db
+            .Blogs
+            .Where(b => b.Id == 2)
+            .SelectMany(b => b.Posts)
+            .Count().ShouldBe(2));
+
+        [Fact]
+        public void AutoIncludesSelectedPosts() => BloggingContext(db => db
+            .Blogs
+            .SelectMany(b => b.Posts)
+            .Count().ShouldBe(4));
 
         [Fact]
         public void AddsPostToBlog() => BloggingContext(db => {
@@ -44,7 +40,7 @@ namespace Tests {
             blog.Posts.Add(newPost);
             db.SaveChanges();
 
-            Should.NotThrow(() => db.Posts.Single(p => p.Title == "NEW!"));
+            db.Posts.Single(p => p.Title == "NEW!").Content.ShouldBe("...and fresh.");
         });
 
         [Fact]
@@ -52,10 +48,10 @@ namespace Tests {
             var blog = db.Blogs.Include(b => b.Posts).Single(b => b.Id == 2);
             var post = blog.Posts.Single(p => p.Title == "Title...");
 
-            post.Title = "Super Title!";
+            post.Content = "Fresh content!";
             db.SaveChanges();
 
-            db.Posts.Any(p => p.Title == "Super Title!").ShouldBe(true);
+            db.Posts.Single(p => p.Title == "Title...").Content.ShouldBe("Fresh content!");
         });
 
         [Fact]
@@ -102,23 +98,30 @@ namespace Tests {
 
         [Fact]
         public void CanDiscriminateReviews() => BloggingContext(db => {
-            var post = db.Posts.Include(p => p.Reviews).Single(p => p.Id == 2);
-
-            post.Reviews.Count.ShouldBe(3);
-            post.Reviews.OfType<NegativeReview>().Count().ShouldBe(2);
-            post.Reviews.OfType<PositiveReview>().Count().ShouldBe(1);
+            db.Reviews.OfType<PositiveReview>().Count().ShouldBe(1);
+            db.Reviews.OfType<NegativeReview>().Count().ShouldBe(2);
         });
 
-        //[Fact]
-        //public void CanIncludeTextsOfDiscriminatedReviews() => BloggingContext(db => {
-        //    var post = db.Posts
-        //        .Include(p => p.Reviews).ThenInclude(r => (r as NegativeReview).Critique)
-        //        .Include(p => p.Reviews).ThenInclude(r => (r as PositiveReview).Praise)
-        //        .Single(p => p.Id == 2);
+        [Fact]
+        public void CanLoadTextsOfDiscriminatedReviews() => BloggingContext(db => {
+            var post = db.Posts
+                .Include(p => p.NegativeReviews).ThenInclude(r => r.CritiqueText)
+                .Include(p => p.PositiveReviews).ThenInclude(r => r.PraiseText)
+                .Single(p => p.Id == 2);
 
-        //    post.Reviews.OfType<NegativeReview>().Count().ShouldBe(2);
-        //    post.Reviews.OfType<PositiveReview>().Count().ShouldBe(1);
-        //});
+            post.NegativeReviews.Count(r => r.CritiqueText?.MeanText != null).ShouldBe(2);
+            post.PositiveReviews.Single().PraiseText?.NiceText.ShouldNotBeNull();
+        });
+
+        [Fact]
+        public void DeletesTextWhenDeletingReview() => BloggingContext(db => {
+            var post = db.Posts.Include(p => p.NegativeReviews).Single(p => p.Id == 2);
+
+            post.NegativeReviews.Clear();
+            db.SaveChanges();
+
+            db.CritiqueTexts.Any().ShouldBeFalse();
+        });
 
         private static void BloggingContext(Action<BloggingContext> action) {
             BloggingDbSeed.Reset();

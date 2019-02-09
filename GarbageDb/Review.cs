@@ -1,30 +1,32 @@
 ﻿namespace GarbageDb {
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+
+    [Table("M_Reviews")]
     public abstract class Review {
+        [Key]
+        [Column("Pid")]
         public int Id { get; set; }
-        public char Type { get; set; }
+
+        [Column("PostXid")]
         public int PostId { get; set; }
+
+        [ForeignKey(nameof(PostId))]
         public Post Post { get; set; }
+
+        public string Type { get; set; }
+
+        [Column("TextXid")]
+        public int TextId { get; set; }
     }
 
     public class NegativeReview : Review {
-        //public Critique Critique { get; set; }
+        [ForeignKey(nameof(TextId))]
+        public CritiqueText CritiqueText { get; set; }
     }
 
     public class PositiveReview : Review {
-        //public Praise Praise { get; set; }
-    }
-
-    public class Critique {
-        public int Id { get; set; }
-        public string MeanText { get; set; }
-        public int NegativeReviewId { get; set; }
-        public NegativeReview NegativeReview { get; set; }
-    }
-
-    public class Praise {
-        public int Id { get; set; }
-        public string NiceText { get; set; }
-        public int PositiveReviewId { get; set; }
-        public PositiveReview PositiveReview { get; set; }
+        [ForeignKey(nameof(TextId))]
+        public PraiseText PraiseText { get; set; }
     }
 }
