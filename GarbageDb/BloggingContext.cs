@@ -1,6 +1,5 @@
 ﻿namespace GarbageDb {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
@@ -9,12 +8,12 @@
     using Microsoft.EntityFrameworkCore.Infrastructure;
 
     public class BloggingContext : DbContext {
-        private static readonly Dictionary<Type, PropertyInfo> InvertedOneToOneRelations = Assembly
+        private static readonly ILookup<Type, PropertyInfo> InvertedOneToOneRelations = Assembly
             .GetAssembly(typeof(BloggingContext))
             .GetTypes()
             .SelectMany(t => t.GetCustomAttributes<ForceCascadeDeleteAttribute>(), (t, a) => (type: t, attr: a))
             .Select(x => x.type.GetProperty(x.attr.Name))
-            .ToDictionary(p => p.DeclaringType);
+            .ToLookup(p => p.DeclaringType);
 
         public BloggingContext() { }
 
@@ -56,8 +55,7 @@
                     .Entries()
                     .Where(e => e.State == EntityState.Deleted)
                     .Select(e => e.Entity)
-                    .Select(e => (entity: e, prop: InvertedOneToOneRelations.GetValueOrDefault(e.GetType())))
-                    .Where(x => x.prop != null)
+                    .SelectMany(e => InvertedOneToOneRelations[e.GetType()], (e, p) => (entity: e, prop: p))
                     .Select(x => x.prop.GetValue(x.entity))
                     .ForEach(e => Entry(e).State = EntityState.Deleted);
             } finally {
