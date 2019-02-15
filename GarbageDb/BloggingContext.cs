@@ -1,15 +1,24 @@
 ﻿namespace GarbageDb {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
 
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
     using Microsoft.EntityFrameworkCore.Infrastructure;
 
     public class BloggingContext : DbContext {
+        private static readonly Dictionary<Type, PropertyInfo> DependantsToDelete = Assembly
+            .GetAssembly(typeof(BloggingContext))
+            .GetTypes()
+            .SelectMany(t => t.GetProperties())
+            .Where(p => p.GetCustomAttribute<ForceCascadeDeleteAttribute>() != null)
+            .ToDictionary(p => p.DeclaringType);
+
         public BloggingContext() { }
 
-        public BloggingContext(DbContextOptions options)
-            : base(options) { }
+        public BloggingContext(DbContextOptions options) : base(options) { }
 
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<Post> Posts { get; set; }
@@ -39,18 +48,14 @@
 
             try {
                 ChangeTracker.AutoDetectChangesEnabled = false;
-
-                foreach (var entry in ChangeTracker
-                    .Entries<CritiqueText>()
-                    .Where(e => Entry(e.Entity.Review).State == EntityState.Deleted)) {
-                    entry.State = EntityState.Deleted;
-                }
-
-                foreach (var entry in ChangeTracker
-                    .Entries<PraiseText>()
-                    .Where(e => Entry(e.Entity.Review).State == EntityState.Deleted)) {
-                    entry.State = EntityState.Deleted;
-                }
+                ChangeTracker
+                    .Entries()
+                    .Where(e => e.State == EntityState.Deleted)
+                    .Select(e => e.Entity)
+                    .Select(e => (entity: e, prop: DependantsToDelete.GetValueOrDefault(e.GetType())))
+                    .Where(x => x.prop != null)
+                    .Select(x => x.prop.GetValue(x.entity))
+                    .ForEach(e => Entry(e).State = EntityState.Deleted);
             } finally {
                 ChangeTracker.AutoDetectChangesEnabled = true;
             }

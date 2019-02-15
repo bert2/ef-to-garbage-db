@@ -22,11 +22,13 @@
 
     public class NegativeReview : Review {
         [ForeignKey(nameof(TextId))]
+        [ForceCascadeDelete]
         public CritiqueText CritiqueText { get; set; }
     }
 
     public class PositiveReview : Review {
         [ForeignKey(nameof(TextId))]
+        [ForceCascadeDelete]
         public PraiseText PraiseText { get; set; }
     }
 }
