@@ -1,5 +1,6 @@
 ﻿namespace GarbageDb {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
@@ -8,12 +9,13 @@
     using Microsoft.EntityFrameworkCore.Infrastructure;
 
     public class BloggingContext : DbContext {
-        private static readonly ILookup<Type, PropertyInfo> InvertedOneToOneRelations = Assembly
+        private static readonly Dictionary<Type, PropertyInfo[]> InvertedOneToOneRelations = Assembly
             .GetAssembly(typeof(BloggingContext))
             .GetTypes()
-            .SelectMany(t => t.GetCustomAttributes<ForceCascadeDeleteAttribute>(), (t, a) => (type: t, attr: a))
-            .Select(x => x.type.GetProperty(x.attr.Name))
-            .ToLookup(p => p.DeclaringType);
+            .Select(t => (type: t, attrs: t.GetCustomAttributes<ForceCascadeDeleteAttribute>()))
+            .Where(x => x.attrs.Any())
+            .Select(GetPropertiesToForceDelete)
+            .ToDictionary(x => x.type, x => x.props);
 
         public BloggingContext() { }
 
@@ -55,12 +57,16 @@
                     .Entries()
                     .Where(e => e.State == EntityState.Deleted)
                     .Select(e => e.Entity)
-                    .SelectMany(e => InvertedOneToOneRelations[e.GetType()], (e, p) => (entity: e, prop: p))
+                    .Select(e => (entity: e, props: InvertedOneToOneRelations.GetValueOrDefault(e.GetType())))
+                    .Where(x => x.props != null)
+                    .SelectMany(x => x.props, (x, p) => (entity: x.entity, prop: p))
                     .Select(x => x.prop.GetValue(x.entity))
                     .ForEach(e => Entry(e).State = EntityState.Deleted);
             } finally {
                 ChangeTracker.AutoDetectChangesEnabled = true;
             }
         }
+        private static (Type type, PropertyInfo[] props) GetPropertiesToForceDelete((Type type, IEnumerable<ForceCascadeDeleteAttribute> attrs) x)
+            => (x.type, x.attrs.Select(a => x.type.GetProperty(a.Name)).ToArray());
     }
 }
