@@ -9,7 +9,7 @@
     using Microsoft.EntityFrameworkCore.Infrastructure;
 
     public class BloggingContext : DbContext {
-        private static readonly Dictionary<Type, PropertyInfo> DependantsToDelete = Assembly
+        private static readonly Dictionary<Type, PropertyInfo> InvertedOneToOneRelations = Assembly
             .GetAssembly(typeof(BloggingContext))
             .GetTypes()
             .SelectMany(t => t.GetCustomAttributes<ForceCascadeDeleteAttribute>(), (t, a) => (type: t, attr: a))
@@ -28,9 +28,8 @@
         public DbSet<PraiseText> PraiseTexts { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-            if (!optionsBuilder.IsConfigured) {
+            if (!optionsBuilder.IsConfigured)
                 optionsBuilder.UseSqlite("Data Source=blogging.db");
-            }
         }
 
         protected override void OnModelCreating(ModelBuilder mb) {
@@ -41,8 +40,13 @@
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess) {
-            // Note that this is internal code to force cascade deletes to happen.
-            // It may stop working in any future release.
+            ForceCascadeDeleteOnInvertedOneToOneRelations();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        // Note that this is internal code to force cascade deletes to happen.
+        // It may stop working in any future release.
+        private void ForceCascadeDeleteOnInvertedOneToOneRelations() {
             ChangeTracker.DetectChanges();
             this.GetService<IStateManager>().GetEntriesToSave();
 
@@ -52,15 +56,13 @@
                     .Entries()
                     .Where(e => e.State == EntityState.Deleted)
                     .Select(e => e.Entity)
-                    .Select(e => (entity: e, prop: DependantsToDelete.GetValueOrDefault(e.GetType())))
+                    .Select(e => (entity: e, prop: InvertedOneToOneRelations.GetValueOrDefault(e.GetType())))
                     .Where(x => x.prop != null)
                     .Select(x => x.prop.GetValue(x.entity))
                     .ForEach(e => Entry(e).State = EntityState.Deleted);
             } finally {
                 ChangeTracker.AutoDetectChangesEnabled = true;
             }
-
-            return base.SaveChanges(acceptAllChangesOnSuccess);
         }
     }
 }
