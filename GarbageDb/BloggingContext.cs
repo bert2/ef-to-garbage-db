@@ -45,6 +45,12 @@
                     .Where(e => Entry(e.Entity.Review).State == EntityState.Deleted)) {
                     entry.State = EntityState.Deleted;
                 }
+
+                foreach (var entry in ChangeTracker
+                    .Entries<PraiseText>()
+                    .Where(e => Entry(e.Entity.Review).State == EntityState.Deleted)) {
+                    entry.State = EntityState.Deleted;
+                }
             } finally {
                 ChangeTracker.AutoDetectChangesEnabled = true;
             }

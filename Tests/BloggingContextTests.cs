@@ -114,7 +114,7 @@ namespace Tests {
         });
 
         [Fact]
-        public void DeletesTextWhenDeletingReview() => BloggingContext(db => {
+        public void DeletesCritiqueTextWhenDeletingNegativeReview() => BloggingContext(db => {
             var post = db.Posts
                 .Include(p => p.NegativeReviews)
                     .ThenInclude(r => r.CritiqueText)
@@ -124,6 +124,19 @@ namespace Tests {
             db.SaveChanges();
 
             db.CritiqueTexts.Any().ShouldBeFalse();
+        });
+
+        [Fact]
+        public void DeletesPraiseTextWhenDeletingPositiveReview() => BloggingContext(db => {
+            var post = db.Posts
+                .Include(p => p.PositiveReviews)
+                    .ThenInclude(r => r.PraiseText)
+                .Single(p => p.Id == 2);
+
+            post.PositiveReviews.Clear();
+            db.SaveChanges();
+
+            db.PraiseTexts.Any().ShouldBeFalse();
         });
 
         private static void BloggingContext(Action<BloggingContext> action) {
