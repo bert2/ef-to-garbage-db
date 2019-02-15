@@ -12,8 +12,8 @@
         private static readonly Dictionary<Type, PropertyInfo> DependantsToDelete = Assembly
             .GetAssembly(typeof(BloggingContext))
             .GetTypes()
-            .SelectMany(t => t.GetProperties())
-            .Where(p => p.GetCustomAttribute<ForceCascadeDeleteAttribute>() != null)
+            .SelectMany(t => t.GetCustomAttributes<ForceCascadeDeleteAttribute>(), (t, a) => (type: t, attr: a))
+            .Select(x => x.type.GetProperty(x.attr.Name))
             .ToDictionary(p => p.DeclaringType);
 
         public BloggingContext() { }

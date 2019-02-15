@@ -20,15 +20,15 @@
         public int TextId { get; set; }
     }
 
+    [ForceCascadeDelete(nameof(CritiqueText))]
     public class NegativeReview : Review {
         [ForeignKey(nameof(TextId))]
-        [ForceCascadeDelete]
         public CritiqueText CritiqueText { get; set; }
     }
 
+    [ForceCascadeDelete(nameof(PraiseText))]
     public class PositiveReview : Review {
         [ForeignKey(nameof(TextId))]
-        [ForceCascadeDelete]
         public PraiseText PraiseText { get; set; }
     }
 }
