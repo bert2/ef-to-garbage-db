@@ -115,7 +115,10 @@ namespace Tests {
 
         [Fact]
         public void DeletesTextWhenDeletingReview() => BloggingContext(db => {
-            var post = db.Posts.Include(p => p.NegativeReviews).Single(p => p.Id == 2);
+            var post = db.Posts
+                .Include(p => p.NegativeReviews)
+                    .ThenInclude(r => r.CritiqueText)
+                .Single(p => p.Id == 2);
 
             post.NegativeReviews.Clear();
             db.SaveChanges();

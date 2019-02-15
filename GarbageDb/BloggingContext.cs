@@ -1,5 +1,9 @@
 ﻿namespace GarbageDb {
+    using System.Linq;
+
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+    using Microsoft.EntityFrameworkCore.Infrastructure;
 
     public class BloggingContext : DbContext {
         public BloggingContext() { }
@@ -25,6 +29,27 @@
                 .HasDiscriminator<string>("Type")
                 .HasValue<PositiveReview>("P")
                 .HasValue<NegativeReview>("N");
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess) {
+            // Note that this is internal code to force cascade deletes to happen.
+            // It may stop working in any future release.
+            ChangeTracker.DetectChanges();
+            this.GetService<IStateManager>().GetEntriesToSave();
+
+            try {
+                ChangeTracker.AutoDetectChangesEnabled = false;
+
+                foreach (var entry in ChangeTracker
+                    .Entries<CritiqueText>()
+                    .Where(e => Entry(e.Entity.Review).State == EntityState.Deleted)) {
+                    entry.State = EntityState.Deleted;
+                }
+            } finally {
+                ChangeTracker.AutoDetectChangesEnabled = true;
+            }
+
+            return base.SaveChanges(acceptAllChangesOnSuccess);
         }
     }
 }
