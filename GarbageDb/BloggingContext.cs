@@ -45,8 +45,8 @@
                 (t, a) => (principal: t, dependant: a.Name))
             .Select(x => x.principal.GetProperty(x.dependant))
             .Tap(p => Debug.Assert(
-                p.PropertyType.GetInterface(nameof(IEnumerable)) == null,
-                $"Property {p.DeclaringType.Name}.{p.Name} targeted by {nameof(ForceCascadeDeleteAttribute)} has to be a one-to-one relation."))
+                p.PropertyType.IsClass && p.PropertyType.GetInterface(nameof(IEnumerable)) == null,
+                $"Property {p.DeclaringType.Name}.{p.Name} targeted by {nameof(ForceCascadeDeleteAttribute)} has to be part of a one-to-one relationship."))
             .ToLookup(p => p.DeclaringType);
 
         // Note that this is internal code to force cascade deletes to happen.
